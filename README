@@ -27,75 +27,67 @@ agentaddress udp:9999
 
 VMM-MIB structure at a glance
 + vmm-mib  (.1.3.6.1.2.1.TBD)  -- MODULE-IDENTITY; TBD=23456 for the development
-  + hypervisor  (1)
-  | + hvSoftware   (1)  -- DisplayString (SIZE (0..255))
-  | + hvVersion    (2)  -- DisplayString (SIZE (0..255))
-  | + hvObjectID   (3)  -- OBJECT IDENTIFIER
-  | + hvUpTime     (4)  -- TimeTicks
-  | + hvCpuNumber  (5)  -- Integer32
-  | + hvCpuTable   (6)
-  |   + hvCpuEntry  (1)
-  |     INDEX  { hvCpuIndex }
-  |     + hvCpuIndex        (1)  -- HypervisorCPUIndex
-  |     + hvCpuDeviceIndex  (2)  -- Integer32 (hrDeviceIndex in
-  |                                 hvProcessorTable defined in
-  |                                 HOST-RESOURCE-MIB)
-  |     + hvCpuClockRate    (3)  -- Integer32 (KHz)
-  + vms         (2)
-    + vmNumber           (1)  -- Integer32
-    + vmTableLastChange  (2)  -- TimeTicks (hvUpTime)
-    + vmTable            (3)
+  + vmObjects  (1)
+    + vmHypervisor       (1)
+    | + vmHvSoftware         (1)  -- DisplayString (SIZE (0..255))
+    | + vmHvVersion          (2)  -- DisplayString (SIZE (0..255))
+    | + vmHvObjectID         (3)  -- OBJECT IDENTIFIER
+    | + vmHvUpTime           (4)  -- TimeTicks
+    + vmNumber	         (2)  -- Integer32
+    + vmTableLastChange  (3)  -- TimeTicks
+    + vmTable            (4)
     | + vmEntry  (1)
     |   INDEX  { vmIndex }
     |   + vmIndex          (1)  -- VirtualMachineIndex
     |   + vmName           (2)  -- DisplayString
     |   + vmUUID           (3)  -- VirtualMachineUUID
     |   + vmOSType         (4)  -- DisplayString
-    |   + vmAdminState     (5)  -- Integer32
-    |   + vmState          (6)  -- Integer32
-    |   + vmVcpuNumber     (7)  -- Integer32
-    |   + vmCpuTime        (8)  -- Counter64
-    |   + vmMemUnit        (9)  -- Integer32
-    |   + vmMaxMem         (10) -- Integer32
-    |   + vmMinMem         (11) -- Integer32
-    |   + vmCurMem         (12) -- Integer32
-    |   + vmStorageNumber  (13) -- Integer32
-    |   + vmIfNumber       (14) -- Integer32
-    |   + vmAutoStart      (15) -- Integer32
-    + vcpus              (4)
-    | + vcpuTable (1)
-    |   + vcpuEntry  (1)
-    |     INDEX { vmIndex, vcpuIndex }
-    |     + vcpuIndex    (1)  -- VirtualCPUIndex
-    |     + vcpuCpuTime  (2)  -- Counter64
-    | + vcpuAffinityTable  (2)
-    |   + vcpuAffinityEntry  (1)
-    |     INDEX { vmIndex, vcpuIndex, vcpuHvCpuIndex }
-    |     + vcpuHvCpuIndex  (1)  -- HypervisorCPUIndex
-    |     + vcpuAffinity    (2)  -- Integer32
-    + vstorage           (5)
-    | + vstorageTable  (1)
-    |   + vstorageEntry  (1)
-    |     INDEX { vmIndex, vstorageIndex }
-    |     + vstorageIndex          (1)  -- VirtualStorageIndex
-    |     + vstorageName           (2)  -- DisplayString
-    |     + vstorageType           (3)  -- Integer32
-    |     + vstorageTypeHint       (4)  -- DisplayString
-    |     + vstorageResourceID     (5)  -- DisplayString
-    |     + vstorageSizeUnit       (6)  -- Integer32
-    |     + vstorageDefinedSize    (7)  -- Integer32
-    |     + vstorageAllocatedSize  (8)  -- Integer32
-    + vif                (6)
-    | + vifTable  (1)
-    |   + vifEntry  (1)
-    |     INDEX { vmIndex, vifIndex }
-    |     + vifIndex               (1)  -- VirtualInterfaceIndex
-    |     + vifNetworkIndex        (2)  -- InterfaceIndexOrZero
-    |     + vifName                (3)  -- DisplayString
-    |     + vifModel               (4)  -- DisplayString
-    |     + vifPhysAddress         (5)  -- PhysAddress
+    |   + vmAdminState     (5)  -- VirtualMachineAdminState
+    |   + vmOperState      (6)  -- VirtualMachineOperState
+    |   + vmAutoStart      (7)  -- VirtualMachineAutoStart
+    |   + vmPersistent     (8)  -- VirtualMachinePersistent
+    |   + vmCurCpuNumber   (9)  -- Integer32
+    |   + vmMinCpuNumber   (10) -- Integer32
+    |   + vmMaxCpuNumber   (11) -- Integer32
+    |   + vmMemUnit        (12) -- Integer32
+    |   + vmCurMem         (13) -- Integer32
+    |   + vmMinMem         (14) -- Integer32
+    |   + vmMaxMem         (15) -- Integer32
+    |   + vmUpTime         (16) -- TimeTicks
+    |   + vmCpuTime        (17) -- Counter64
+    + vmCpuTable         (5)
+    | + vmCpuEntry  (1)
+    |   INDEX { vmIndex, vmCpuIndex }
+    |   + vmCpuIndex       (1)  -- VirtualMachineCpuIndex
+    |   + vmCpuCoreTime    (2)  -- Counter64
+    + vmCpuAffinityTable (6)
+    | + vmCpuAffinityEntry  (1)
+    |   INDEX { vmIndex, vmCpuIndex, vmCpuPhysIndex }
+    |   + vmCpuPhysIndex   (1)  -- Integer32
+    |   + vmCpuAffinity    (2)  -- Integer32
+    + vmStorageTable     (7)
+    | + vmStorageEntry  (1)
+    |   INDEX { vmStorageVmIndex, vmStorageIndex }
+    |   + vmStorageVmIndex           (1)  -- VirtualMachineIndexOrZero
+    |   + vmStorageIndex             (2)  -- VirtualMachineStorageIndex
+    |   + vmStorageParent            (3)  -- Integer32
+    |   + vmStorageSourceType        (4)  -- VirtualMachineStorageSourceType
+    |   + vmStorageSourceTypeString  (5)  -- SnmpAdminString
+    |   + vmStorageResourceID        (6)  -- SnmpAdminString
+    |   + vmStorageAccess            (7)  -- VirtualMachineStorageAccess
+    |   + vmStorageMediaType         (8)  -- VirtualMachineStorageMediaType
+    |   + vmStorageMediaTypeString   (9)  -- SnmpAdminString
+    |   + vmStorageSizeUnit          (10)  -- Integer32
+    |   + vmStorageDefinedSize       (11)  -- Integer32
+    |   + vmStorageAllocatedSize     (12)  -- Integer32
+    |   + vmStorageReadIOs           (13)  -- Counter64
+    |   + vmStorageWriteIOs          (14)  -- Counter64
+    + vmNetworkTable     (8)
+    | + vmNetworkEntry  (1)
+    |   INDEX { vmIndex, vmNetworkIndex }
+    |   + vmNetworkIndex         (1)  -- VirtualMachineNetworkIndex
+    |   + vmNetworkIfIndex       (2)  -- InterfaceIndexOrZero
+    |   + vmNetworkParent        (3)  -- InterfaceIndexOrZero
+    |   + vmNetworkModel         (4)  -- SnmpAdminString
+    |   + vmNetworkPhysAddress   (5)  -- PhysAddress
     + vmConformance
-      + vmGroups      (1)
-        + vmNotificationGroup (1)
-      + vmCompliances (2)
-    + vmTrap
