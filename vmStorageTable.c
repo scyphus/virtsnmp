@@ -43,7 +43,7 @@ initialize_table_vmStorageTable(void)
                            ASN_INTEGER,  /* index: vmStorageIndex */
                            0);
     table_info->min_column = COLUMN_VMSTORAGEVMINDEX;
-    table_info->max_column = COLUMN_VMSTORAGEWRITEIOS;
+    table_info->max_column = COLUMN_VMSTORAGEWRITEOCTETS;
 
     iinfo = SNMP_MALLOC_TYPEDEF( netsnmp_iterator_info );
     iinfo->get_first_data_point = vmStorageTable_get_first_data_point;
@@ -191,6 +191,8 @@ vmStorageTable_handler(
     long vmStorageAllocatedSize;
     U64 vmStorageReadIOs;
     U64 vmStorageWriteIOs;
+    U64 vmStorageReadOctets;
+    U64 vmStorageWriteOctets;
     uint64_t val64;
     int ret;
 
@@ -353,7 +355,7 @@ vmStorageTable_handler(
                                               SNMP_NOSUCHINSTANCE);
                     continue;
                 }
-                val64 = gh_getVstorageTable_vmStorageReadIOs(
+                val64 = gh_getVstorageTable_vmStorageWriteIOs(
                     table_entry->vmStorageVmIndex, table_entry->vmStorageIndex);
                 vmStorageReadIOs.high = (val64 >> 32) & 0xffffffff;
                 vmStorageReadIOs.low = val64 & 0xffffffff;
@@ -376,6 +378,36 @@ vmStorageTable_handler(
                 snmp_set_var_typed_value( request->requestvb, ASN_COUNTER64,
                                           &vmStorageWriteIOs,
                                           sizeof(vmStorageWriteIOs));
+                break;
+            case COLUMN_VMSTORAGEREADOCTETS:
+                if ( !table_entry ) {
+                    netsnmp_set_request_error(reqinfo, request,
+                                              SNMP_NOSUCHINSTANCE);
+                    continue;
+                }
+                val64 = gh_getVstorageTable_vmStorageReadOctets(
+                    table_entry->vmStorageVmIndex, table_entry->vmStorageIndex);
+                vmStorageReadOctets.high = (val64 >> 32) & 0xffffffff;
+                vmStorageReadOctets.low = val64 & 0xffffffff;
+
+                snmp_set_var_typed_value( request->requestvb, ASN_COUNTER64,
+                                          &vmStorageReadOctets,
+                                          sizeof(vmStorageReadOctets));
+                break;
+            case COLUMN_VMSTORAGEWRITEOCTETS:
+                if ( !table_entry ) {
+                    netsnmp_set_request_error(reqinfo, request,
+                                              SNMP_NOSUCHINSTANCE);
+                    continue;
+                }
+                val64 = gh_getVstorageTable_vmStorageWriteOctets(
+                    table_entry->vmStorageVmIndex, table_entry->vmStorageIndex);
+                vmStorageWriteOctets.high = (val64 >> 32) & 0xffffffff;
+                vmStorageWriteOctets.low = val64 & 0xffffffff;
+
+                snmp_set_var_typed_value( request->requestvb, ASN_COUNTER64,
+                                          &vmStorageWriteOctets,
+                                          sizeof(vmStorageWriteOctets));
                 break;
             default:
                 netsnmp_set_request_error(reqinfo, request,

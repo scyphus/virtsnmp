@@ -419,6 +419,7 @@ _update_vm_entry_for_vstorage(vm_entry_t *entry)
     xmlNodePtr child;
     xmlChar *prop;
     off_t dsize;
+    virDomainBlockStatsStruct bstats;
 
     if ( NULL == entry ) {
         return -1;
@@ -558,6 +559,15 @@ _update_vm_entry_for_vstorage(vm_entry_t *entry)
 
                         xmlFree(prop);
                     }
+                }
+                /* update read/write ios/octets */
+                if (0 == virDomainBlockStats(entry->dom,
+                                             vstorages[i].resourceid,
+                                             &bstats, sizeof(bstats))) {
+                    vstorages[i].readios = bstats.rd_req;
+                    vstorages[i].readoctets = bstats.rd_bytes;
+                    vstorages[i].writeios = bstats.wr_req;
+                    vstorages[i].writeoctets = bstats.wr_bytes;
                 }
             }
         }
@@ -2114,6 +2124,7 @@ uint64_t
 gh_getVstorageTable_vmStorageReadIOs(long vmIndex, long vmStorageIndex)
 {
     vm_entry_t *entry;
+	vm_storage_t *storage;
 
     entry = _search_vm_entry(vmIndex, gh.vms);
     if ( NULL == entry ) {
@@ -2129,7 +2140,7 @@ gh_getVstorageTable_vmStorageReadIOs(long vmIndex, long vmStorageIndex)
 
     assert ( entry->vstorages[vmStorageIndex - 1].index == vmStorageIndex );
 
-    return 0;
+    return entry->vstorages[vmStorageIndex - 1].readios;
 }
 uint64_t
 gh_getVstorageTable_vmStorageWriteIOs(long vmIndex, long vmStorageIndex)
@@ -2150,7 +2161,50 @@ gh_getVstorageTable_vmStorageWriteIOs(long vmIndex, long vmStorageIndex)
 
     assert ( entry->vstorages[vmStorageIndex - 1].index == vmStorageIndex );
 
-    return 0;
+    return entry->vstorages[vmStorageIndex - 1].writeios;
+}
+uint64_t
+gh_getVstorageTable_vmStorageReadOctets(long vmIndex, long vmStorageIndex)
+{
+    vm_entry_t *entry;
+	vm_storage_t *storage;
+
+    entry = _search_vm_entry(vmIndex, gh.vms);
+    if ( NULL == entry ) {
+        return 0;
+    }
+    /* TODO: Implement cache */
+    _update_vm_entry_for_vstorage(entry);
+
+    if ( vmStorageIndex - 1 < 0 || vmStorageIndex - 1 >= entry->nvstorage ) {
+        /* Out of range */
+        return 0;
+    }
+
+    assert ( entry->vstorages[vmStorageIndex - 1].index == vmStorageIndex );
+
+    return entry->vstorages[vmStorageIndex - 1].readoctets;
+}
+uint64_t
+gh_getVstorageTable_vmStorageWriteOctets(long vmIndex, long vmStorageIndex)
+{
+    vm_entry_t *entry;
+
+    entry = _search_vm_entry(vmIndex, gh.vms);
+    if ( NULL == entry ) {
+        return 0;
+    }
+    /* TODO: Implement cache */
+    _update_vm_entry_for_vstorage(entry);
+
+    if ( vmStorageIndex - 1 < 0 || vmStorageIndex - 1 >= entry->nvstorage ) {
+        /* Out of range */
+        return 0;
+    }
+
+    assert ( entry->vstorages[vmStorageIndex - 1].index == vmStorageIndex );
+
+    return entry->vstorages[vmStorageIndex - 1].writeoctets;
 }
 
 /*
