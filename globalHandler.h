@@ -60,9 +60,13 @@ typedef struct _vm_storage {
     /* vmStorageAllocatedSize */
     long allocsize;
     /* vmReadIOs */
-    long readios;
+    uint64_t readios;
     /* vmWriteIOs */
-    long writeios;
+    uint64_t writeios;
+    /* vmReadOctets */
+    uint64_t readoctets;
+    /* vmWriteOctets */
+    uint64_t writeoctets;
 } vm_storage_t;
 
 typedef struct _vm_interface {
@@ -204,6 +208,8 @@ extern "C" {
     long gh_getVstorageTable_vmStorageAllocatedSize(long, long);
     uint64_t gh_getVstorageTable_vmStorageReadIOs(long, long);
     uint64_t gh_getVstorageTable_vmStorageWriteIOs(long, long);
+    uint64_t gh_getVstorageTable_vmStorageReadOctets(long, long);
+    uint64_t gh_getVstorageTable_vmStorageWriteOctets(long, long);
 
     /* vmNetworkTable */
     long gh_getVifTable_vmNetworkIfIndex(long, long);
