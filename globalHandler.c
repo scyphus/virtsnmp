@@ -419,7 +419,6 @@ _update_vm_entry_for_vstorage(vm_entry_t *entry)
     xmlNodePtr child;
     xmlChar *prop;
     off_t dsize;
-    virDomainBlockStatsStruct bstats;
 
     if ( NULL == entry ) {
         return -1;
@@ -495,6 +494,8 @@ _update_vm_entry_for_vstorage(vm_entry_t *entry)
         vstorages[i].allocsize = 0;
         vstorages[i].readios = 0;
         vstorages[i].writeios = 0;
+        vstorages[i].readoctets = 0;
+        vstorages[i].writeoctets = 0;
 
         node = nodeset->nodeTab[i];
         assert ( node->type == XML_ELEMENT_NODE );
@@ -560,15 +561,6 @@ _update_vm_entry_for_vstorage(vm_entry_t *entry)
                         xmlFree(prop);
                     }
                 }
-                /* update read/write ios/octets */
-                if (0 == virDomainBlockStats(entry->dom,
-                                             vstorages[i].resourceid,
-                                             &bstats, sizeof(bstats))) {
-                    vstorages[i].readios = bstats.rd_req;
-                    vstorages[i].readoctets = bstats.rd_bytes;
-                    vstorages[i].writeios = bstats.wr_req;
-                    vstorages[i].writeoctets = bstats.wr_bytes;
-                }
             }
         }
     }
@@ -588,6 +580,33 @@ _update_vm_entry_for_vstorage(vm_entry_t *entry)
                                           entry->vstorages[i].index);
     }
 
+    return 0;
+}
+static int
+_update_vstorage_block_stats(vm_entry_t *entry)
+{
+    vm_storage_t *vstorages = entry->vstorages;
+    virDomainBlockStatsStruct bstats;
+    int i;
+
+    if (vstorages == NULL) {
+        /* no storage is attached */
+        return 0;
+    }
+
+    /* update read/write ios/octets */
+    for (i = 0; i < entry->nvstorage; i++) {
+        if (0 == virDomainBlockStats(entry->dom, vstorages[i].resourceid,
+                                     &bstats, sizeof(bstats))) {
+            vstorages[i].readios = bstats.rd_req;
+            vstorages[i].writeios = bstats.wr_req;
+            vstorages[i].readoctets = bstats.rd_bytes;
+            vstorages[i].writeoctets = bstats.wr_bytes;
+        } else {
+            /* just keep previous values */
+            /* TODO: or should we clear all? */
+        }
+    }
     return 0;
 }
 static long
@@ -2124,14 +2143,13 @@ uint64_t
 gh_getVstorageTable_vmStorageReadIOs(long vmIndex, long vmStorageIndex)
 {
     vm_entry_t *entry;
-	vm_storage_t *storage;
 
     entry = _search_vm_entry(vmIndex, gh.vms);
     if ( NULL == entry ) {
         return 0;
     }
     /* TODO: Implement cache */
-    _update_vm_entry_for_vstorage(entry);
+    _update_vstorage_block_stats(entry);
 
     if ( vmStorageIndex - 1 < 0 || vmStorageIndex - 1 >= entry->nvstorage ) {
         /* Out of range */
@@ -2152,7 +2170,7 @@ gh_getVstorageTable_vmStorageWriteIOs(long vmIndex, long vmStorageIndex)
         return 0;
     }
     /* TODO: Implement cache */
-    _update_vm_entry_for_vstorage(entry);
+    _update_vstorage_block_stats(entry);
 
     if ( vmStorageIndex - 1 < 0 || vmStorageIndex - 1 >= entry->nvstorage ) {
         /* Out of range */
@@ -2167,14 +2185,13 @@ uint64_t
 gh_getVstorageTable_vmStorageReadOctets(long vmIndex, long vmStorageIndex)
 {
     vm_entry_t *entry;
-	vm_storage_t *storage;
 
     entry = _search_vm_entry(vmIndex, gh.vms);
     if ( NULL == entry ) {
         return 0;
     }
     /* TODO: Implement cache */
-    _update_vm_entry_for_vstorage(entry);
+    _update_vstorage_block_stats(entry);
 
     if ( vmStorageIndex - 1 < 0 || vmStorageIndex - 1 >= entry->nvstorage ) {
         /* Out of range */
@@ -2195,7 +2212,7 @@ gh_getVstorageTable_vmStorageWriteOctets(long vmIndex, long vmStorageIndex)
         return 0;
     }
     /* TODO: Implement cache */
-    _update_vm_entry_for_vstorage(entry);
+    _update_vstorage_block_stats(entry);
 
     if ( vmStorageIndex - 1 < 0 || vmStorageIndex - 1 >= entry->nvstorage ) {
         /* Out of range */
