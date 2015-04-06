@@ -355,7 +355,7 @@ vmStorageTable_handler(
                                               SNMP_NOSUCHINSTANCE);
                     continue;
                 }
-                val64 = gh_getVstorageTable_vmStorageWriteIOs(
+                val64 = gh_getVstorageTable_vmStorageReadIOs(
                     table_entry->vmStorageVmIndex, table_entry->vmStorageIndex);
                 vmStorageReadIOs.high = (val64 >> 32) & 0xffffffff;
                 vmStorageReadIOs.low = val64 & 0xffffffff;
