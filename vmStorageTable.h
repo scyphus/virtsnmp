@@ -30,6 +30,8 @@ void vmStorageTable_removeEntryByIndex(long, long);
 #define COLUMN_VMSTORAGEALLOCATEDSIZE           12
 #define COLUMN_VMSTORAGEREADIOS                 13
 #define COLUMN_VMSTORAGEWRITEIOS                14
+#define COLUMN_VMSTORAGEREADOCTETS              15
+#define COLUMN_VMSTORAGEWRITEOCTETS             16
 
 
 #endif /* VMSTORAGETABLE_H */
